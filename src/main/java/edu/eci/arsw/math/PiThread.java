@@ -1,39 +1,54 @@
 package edu.eci.arsw.math;
 
-import java.util.ArrayList;
-
-///  <summary>
-///  An implementation of the Bailey-Borwein-Plouffe formula for calculating hexadecimal
-///  digits of pi.
-///  https://en.wikipedia.org/wiki/Bailey%E2%80%93Borwein%E2%80%93Plouffe_formula
-///  *** Translated from C# code: https://github.com/mmoroney/DigitsOfPi ***
-///  </summary>
-public class PiDigits {
+public class PiThread extends Thread{
 
     private static int DigitsPerSum = 8;
     private static double Epsilon = 1e-17;
-    
-    /**
-     * Returns a range of hexadecimal digits of pi.
-     * @param start The starting location of the range.
-     * @param count The number of digits to return
-     * @return An array containing the hexadecimal digits.
-     */
-    public static byte[] getDigits(int start, int count, int N) {
 
-        PiThread t1 = new PiThread(start, count);
-        t1.run();
+    private int start;
+    private int count;
+    public byte[] digits;
 
-        byte[] ret = t1.getDigitsBytes();
-        return ret;
+    public PiThread(int start, int count){
+        this.start = start;
+        this.count = count;
     }
 
-    /// <summary>
-    /// Returns the sum of 16^(n - k)/(8 * k + m) from 0 to k.
-    /// </summary>
-    /// <param name="m"></param>
-    /// <param name="n"></param>
-    /// <returns></returns>
+    @Override
+    public void run() {
+        if (start < 0) {
+            throw new RuntimeException("Invalid Interval");
+        }
+
+        if (count < 0) {
+            throw new RuntimeException("Invalid Interval");
+        }
+
+        byte[] digits = new byte[count];
+        double sum = 0;
+
+        for (int i = 0; i < count; i++) {
+            if (i % DigitsPerSum == 0) {
+                sum = 4 * sum(1, start)
+                        - 2 * sum(4, start)
+                        - sum(5, start)
+                        - sum(6, start);
+
+                start += DigitsPerSum;
+            }
+
+            sum = 16 * (sum - Math.floor(sum));
+            digits[i] = (byte) sum;
+        }
+        this.digits = digits;
+
+    }
+
+
+    public byte[] getDigitsBytes(){
+        return this.digits;
+    }
+
     private static double sum(int m, int n) {
         double sum = 0;
         int d = m;
@@ -50,7 +65,6 @@ public class PiDigits {
                     break;
                 }
             }
-
             sum += term;
             power--;
             d += 8;
@@ -59,18 +73,11 @@ public class PiDigits {
         return sum;
     }
 
-    /// <summary>
-    /// Return 16^p mod m.
-    /// </summary>
-    /// <param name="p"></param>
-    /// <param name="m"></param>
-    /// <returns></returns>
     private static int hexExponentModulo(int p, int m) {
         int power = 1;
         while (power * 2 <= p) {
             power *= 2;
         }
-
         int result = 1;
 
         while (power > 0) {
@@ -79,15 +86,12 @@ public class PiDigits {
                 result %= m;
                 p -= power;
             }
-
             power /= 2;
-
             if (power > 0) {
                 result *= result;
                 result %= m;
             }
         }
-
         return result;
     }
 
