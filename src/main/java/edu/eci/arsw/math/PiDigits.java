@@ -1,6 +1,7 @@
 package edu.eci.arsw.math;
 
 import java.util.ArrayList;
+import java.util.List;
 
 ///  <summary>
 ///  An implementation of the Bailey-Borwein-Plouffe formula for calculating hexadecimal
@@ -12,6 +13,7 @@ public class PiDigits {
 
     private static int DigitsPerSum = 8;
     private static double Epsilon = 1e-17;
+    public PiThread[] threads;
     
     /**
      * Returns a range of hexadecimal digits of pi.
@@ -20,12 +22,38 @@ public class PiDigits {
      * @return An array containing the hexadecimal digits.
      */
     public static byte[] getDigits(int start, int count, int N) {
+        PiThread bla = new PiThread(start,count);
+        bla.run();
+        for (int i = 0; i < N; i++) {
+            if(N%2 == 0){
+                new PiThread(start, count/N).run();
+                start += count/N;
+            }else{
+                new PiThread(start, count/N + 1).run();
+                start += count/N + 1;
+                N = N-1;
+            }
+        }
 
-        PiThread t1 = new PiThread(start, count);
-        t1.run();
 
-        byte[] ret = t1.getDigitsBytes();
-        return ret;
+        return bla.getDigitsBytes();
+
+    }
+
+    private byte[] divRange(int start, int count, int N){
+
+        for (int i = 0; i < N; i++) {
+            if(N%2 == 0){
+                new PiThread(start, count/N).run();
+                start += count/N;
+            }else{
+                new PiThread(start, count/N + 1).run();
+                start += count/N + 1;
+                N = N-1;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

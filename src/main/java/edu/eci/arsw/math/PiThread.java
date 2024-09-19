@@ -41,7 +41,6 @@ public class PiThread extends Thread{
             digits[i] = (byte) sum;
         }
         this.digits = digits;
-
     }
 
 
